@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
@@ -29,7 +30,15 @@ async function run(){
     try{
         await client.connect();
         const serviceCollection = client.db('NewgeniusCar').collection('service');
+        const orderCollection = client.db('NewgeniusCar').collection('order');
         
+        // Auth
+        app.post('/login', async(req, res) =>{
+            const user = req.body;
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1d'});
+            res.send({accessToken});
+        })
+        // Service Api
         app.get('/service', async(req, res) =>{
             const query = {};
             const cursor = serviceCollection.find(query);
@@ -57,6 +66,25 @@ async function run(){
             const query = {_id: ObjectId(id)};
             const result = await serviceCollection.deleteOne(query);
             res.send(result);
+        })
+
+        //Order collection API
+        app.post('/order', async(req, res) =>{
+            const authHeader = req.headers.authorization;
+            console.log(authHeader);
+            const order = req.body;
+            const result= await orderCollection.insertOne(order);
+            res.send(result);
+        })
+
+
+        //Get all orders
+        app.get('/orders', async(req, res) =>{
+            const email = req.query.email;
+            const query = {email: email};
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray()
+            res.send(orders);
         })
     }
     finally{
