@@ -120,6 +120,10 @@ app.get('/', (req, res) =>{
     res.send('Running genius server');
 })
 
+app.get('/hero', (req, res) =>{
+    res.send('Heroku server working with');
+})
+
 
 app.listen(port, ()=>{
     console.log('Listening to port 5000');
