@@ -21,6 +21,10 @@
  * 2. make sure git add . -> git commit -m "comment" -> git push
  * 3. git push heroku main
  * ------------------
- * connect server with client
+ * connect server with client and deploy client
  * ------------------
+ * 1. Replace localhost by heroku link
+ * 2. npm run build
+ * 3. firebase deploy
+ * website is https://genius-car-frontend.web.app/
  */
