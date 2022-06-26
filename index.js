@@ -16,6 +16,23 @@ app.use(express.json());
 //NewgeniusUser
 //OUIKXl5xPyZnyd1G
 
+const verifyjwt = (req, res, next) =>{
+    const authHeader = req.headers.authorization;
+    //console.log('Inside verified token', authHeader);
+    if(!authHeader){
+       return res.status(401).send({message: 'unauthorizd'});
+    }
+    const token = authHeader.split(' ')[1];
+    // console.log(token);
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if(err){
+            return res.status(403).send({message:'forbidden'});
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.cypwp.mongodb.net/?retryWrites=true&w=majority`;
@@ -36,7 +53,8 @@ async function run(){
         app.post('/login', async(req, res) =>{
             const user = req.body;
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1d'});
-            res.send({accessToken});
+            res.send({success:true, accessToken:accessToken});
+            // console.log(user);
         })
         // Service Api
         app.get('/service', async(req, res) =>{
@@ -70,8 +88,8 @@ async function run(){
 
         //Order collection API
         app.post('/order', async(req, res) =>{
-            const authHeader = req.headers.authorization;
-            console.log(authHeader);
+            // const authHeader = req.headers.authorization;
+            // console.log(authHeader);
             const order = req.body;
             const result= await orderCollection.insertOne(order);
             res.send(result);
@@ -79,7 +97,9 @@ async function run(){
 
 
         //Get all orders
-        app.get('/orders', async(req, res) =>{
+        app.get('/orders', verifyjwt, async(req, res) =>{
+            const authHeader = req.headers.authorization;
+            //console.log(authHeader);
             const email = req.query.email;
             const query = {email: email};
             const cursor = orderCollection.find(query);
